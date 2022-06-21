@@ -1,0 +1,37 @@
+{
+  "name": "zk-web",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Juliette Lamarche <juliette.lamarche@princesse.xyz> (https://github.com/prncss-xyz/)",
+  "license": "MIT",
+  "dependencies": {
+    "@koa/router": "^10.1.1",
+    "commander": "^9.3.0",
+    "gray-matter": "^4.0.3",
+    "handlebars": "^4.7.7",
+    "js-yaml": "^4.1.0",
+    "koa": "^2.13.4",
+    "koa-mount": "^4.0.0",
+    "koa-static": "^5.0.0",
+    "rehype-document": "^6.0.1",
+    "rehype-format": "^4.0.1",
+    "rehype-raw": "^6.1.1",
+    "rehype-stringify": "^9.0.3",
+    "remark-breaks": "^3.0.2",
+    "remark-emoji": "^3.0.2",
+    "remark-frontmatter": "^4.0.1",
+    "remark-gfm": "^3.0.1",
+    "remark-parse": "^10.0.1",
+    "remark-rehype": "^10.1.0",
+    "remark-wiki-link": "^1.0.4",
+    "unified": "^10.1.2",
+    "unist-builder": "^3.0.0",
+    "unist-util-visit": "^4.1.0",
+    "xdg-basedir": "^5.1.0"
+  }
+}
