@@ -1,18 +1,18 @@
-import * as zk from './utils.js';
 import matter from 'gray-matter';
-import { unified } from 'unified';
-import remarkParse from 'remark-parse';
-import breaks from 'remark-breaks';
-import wikiLink from 'remark-wiki-link';
-import emoji from 'remark-emoji';
-import gfm from 'remark-gfm';
-import remarkRehype from 'remark-rehype';
+import rehypeFormat from 'rehype-format';
 import rehypeRaw from 'rehype-raw';
 import rehypeStringify from 'rehype-stringify';
-import rehypeFormat from 'rehype-format';
+import breaks from 'remark-breaks';
+import emoji from 'remark-emoji';
+import gfm from 'remark-gfm';
+import remarkParse from 'remark-parse';
+import remarkRehype from 'remark-rehype';
+import wikiLink from 'remark-wiki-link';
+import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
-import config from './config.js';
-import * as templates from './templates.js';
+import config from '../config.js';
+import * as templates from '../templates.js';
+import * as zk from '../utils.js';
 
 function transform() {
   return async function (tree) {
@@ -65,17 +65,25 @@ async function fetchTitle(link) {
 
 export async function render(link) {
   const raw = await zk.zk(['list', '--format', '{{raw-content}}', link]);
-  if (raw == '') throw Error('link does not exists');
+  if (raw == '')
+    throw Error({
+      code: 'ERR_NO_NOTE',
+      message: `note ${link} does not exists`,
+    });
   const { data, content: contentMd } = matter(raw);
   const contentAST = await processor.process(contentMd);
   const content = String(contentAST);
   const backlinks = await fetchBacklinks(link);
-  const tags = data.tags ?? [];
+  let tags = data.tags ?? [];
+  tags = tags.map((tag) => ({
+    tag,
+    href: '/tags/' + tag,
+  }));
   const record = {
     data,
     content,
     backlinks,
     tags,
   };
-  return templates.notes(record);
+  return templates.note(record);
 }

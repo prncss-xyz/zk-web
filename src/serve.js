@@ -1,10 +1,11 @@
 import Koa from 'koa';
 import Router from '@koa/router';
 import koaStatic from 'koa-static';
-
 import mount from 'koa-mount';
 import config from './config.js';
-import { render } from './render.js';
+import { render as renderNote } from './render/note.js';
+import { render as renderTag } from './render/tag.js';
+import { render as renderTags } from './render/tags.js';
 import { resolve } from 'path';
 
 async function logger(ctx, next) {
@@ -26,16 +27,37 @@ const notes = new Router();
 notes.get('/(.+)', async (ctx) => {
   const link = ctx.url.slice(1);
   try {
-    const html = await render(link);
+    const html = await renderNote(link);
     ctx.type = 'text/html';
     ctx.body = html;
   } catch (e) {
-    // TODO: 404
+    if (e.code !== 'ERR_NO_NOTE') {
+      throw e;
+    }
   }
 });
 
-const router = new Router();
-router.get('/stop', (ctx) => {
+const tags = new Router();
+tags.get('/', async (ctx) => {
+  const html = await renderTags();
+  ctx.type = 'text/html';
+  ctx.body = html;
+});
+tags.get('/(.+)', async (ctx) => {
+  const link = ctx.url.slice(1);
+  try {
+    const html = await renderTag(link);
+    ctx.type = 'text/html';
+    ctx.body = html;
+  } catch (e) {
+    if (e.code !== 'ERR_NO_TAG') {
+      throw e;
+    }
+  }
+});
+
+const api = new Router();
+api.get('/stop', (ctx) => {
   ctx.type = 'text/plain';
   ctx.body = 'bye!';
   setImmediate(() => {
@@ -43,15 +65,19 @@ router.get('/stop', (ctx) => {
   });
 });
 
+const index = new Router(); // without this app crashes on path '/'
+
 const app = new Koa();
 app
   .use(logger)
   .use(onlyLocal)
+  .use(index.routes())
   .use(mount(config.notes, notes.routes()))
-  .use(mount('/api', router.routes()))
+  .use(mount('/tags', tags.routes()))
+  .use(mount('/api', api.routes()))
   .use(mount('/assets', koaStatic(resolve(config.dir, 'assets'))))
   .use(mount('/assets', koaStatic(resolve(process.env.HOME, config.assets))))
-  .use(router.allowedMethods());
+  .use(api.allowedMethods());
 
 export default function serve() {
   app.listen(config.port);
