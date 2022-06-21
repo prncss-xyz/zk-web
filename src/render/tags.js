@@ -9,7 +9,7 @@ export async function render(tag) {
     const res = row.match(/(\S+) \((.+)\)/);
     if (res) {
       let [, tag, count] = res;
-      const href = '/tags/' + tag;
+      const href = '/list?args=--tag+' + tag;
       items.push({ href, tag, count });
     }
   }

@@ -4,7 +4,7 @@ import koaStatic from 'koa-static';
 import mount from 'koa-mount';
 import config from './config.js';
 import { render as renderNote } from './render/note.js';
-import { render as renderTag } from './render/tag.js';
+import { render as renderList } from './render/list.js';
 import { render as renderTags } from './render/tags.js';
 import { resolve } from 'path';
 
@@ -23,39 +23,6 @@ async function onlyLocal(ctx, next) {
   }
 }
 
-const notes = new Router();
-notes.get('/(.+)', async (ctx) => {
-  const link = ctx.url.slice(1);
-  try {
-    const html = await renderNote(link);
-    ctx.type = 'text/html';
-    ctx.body = html;
-  } catch (e) {
-    if (e.code !== 'ERR_NO_NOTE') {
-      throw e;
-    }
-  }
-});
-
-const tags = new Router();
-tags.get('/', async (ctx) => {
-  const html = await renderTags();
-  ctx.type = 'text/html';
-  ctx.body = html;
-});
-tags.get('/(.+)', async (ctx) => {
-  const link = ctx.url.slice(1);
-  try {
-    const html = await renderTag(link);
-    ctx.type = 'text/html';
-    ctx.body = html;
-  } catch (e) {
-    if (e.code !== 'ERR_NO_TAG') {
-      throw e;
-    }
-  }
-});
-
 const api = new Router();
 api.get('/stop', (ctx) => {
   ctx.type = 'text/plain';
@@ -65,15 +32,64 @@ api.get('/stop', (ctx) => {
   });
 });
 
-const index = new Router(); // without this app crashes on path '/'
+const index = new Router();
+index.get('/tags', async (ctx) => {
+  const body = await renderTags();
+  ctx.type = 'text/html';
+  ctx.body = body;
+});
+index.get('/list(/)?(.*)', async (ctx) => {
+  const url = ctx.url.slice('/list'.length);
+  let link;
+  let args = [];
+  let qIndex = url.indexOf('?');
+  if (qIndex === -1) {
+    link = url;
+  } else {
+    link = url.slice(1, qIndex);
+    const query = new URLSearchParams(url.slice(qIndex + 1));
+    if (query.get('alias')) {
+      args = config.alias?.[query.get('alias')];
+      if (typeof args == 'string') {
+        args = args.split(' ');
+      }
+      if (!args) {
+        return;
+      }
+    } else {
+      args = query.get('args')?.split(' ') || [];
+    }
+  }
+  try {
+    const body = await renderList(link, args);
+    ctx.type = 'text/html';
+    ctx.body = body;
+  } catch (e) {
+    console.log(e);
+    if (e.code !== 'ERR_NO_LIST') {
+      throw e;
+    }
+  }
+});
+index.get('/note/(.+)', async (ctx) => {
+  const link = ctx.url.slice('/note/'.length);
+  console.log('--', link);
+  try {
+    const body = await renderNote(link);
+    ctx.type = 'text/html';
+    ctx.body = body;
+  } catch (e) {
+    if (e.code !== 'ERR_NO_NOTE') {
+      throw e;
+    }
+  }
+});
 
 const app = new Koa();
 app
   .use(logger)
   .use(onlyLocal)
   .use(index.routes())
-  .use(mount(config.notes, notes.routes()))
-  .use(mount('/tags', tags.routes()))
   .use(mount('/api', api.routes()))
   .use(mount('/assets', koaStatic(resolve(config.dir, 'assets'))))
   .use(mount('/assets', koaStatic(resolve(process.env.HOME, config.assets))))

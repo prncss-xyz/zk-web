@@ -27,7 +27,7 @@ function transform() {
         alias = await fetchTitle(value);
       }
       node.data.hProperties.className = 'internal';
-      node.data.hProperties.href = config.notes + '/' + value;
+      node.data.hProperties.href = '/note/' + value;
       node.data.hChildren = [{ type: 'text', value: alias }];
     }
   };
@@ -50,7 +50,7 @@ async function fetchBacklinks(link) {
   const res = [];
   for (const [, link] of raw.matchAll(/\[([^\[\]]+)\]/g)) {
     const title = await fetchTitle(link);
-    const href = config.notes + '/' + link;
+    const href = '/note/' + link;
     res.push({ href, title });
   }
   return res;
@@ -66,10 +66,10 @@ async function fetchTitle(link) {
 export async function render(link) {
   const raw = await zk.zk(['list', '--format', '{{raw-content}}', link]);
   if (raw == '')
-    throw Error({
+    throw {
       code: 'ERR_NO_NOTE',
       message: `note ${link} does not exists`,
-    });
+    };
   const { data, content: contentMd } = matter(raw);
   const contentAST = await processor.process(contentMd);
   const content = String(contentAST);
@@ -77,7 +77,7 @@ export async function render(link) {
   let tags = data.tags ?? [];
   tags = tags.map((tag) => ({
     tag,
-    href: '/tags/' + tag,
+    href: '/list/?args=--tag+' + tag,
   }));
   const record = {
     data,

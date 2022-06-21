@@ -18,7 +18,7 @@ export const note = Handlebars.compile(`<!doctype html>
 </html> 
 `);
 
-export const tag = Handlebars.compile(`<!doctype html>
+export const list = Handlebars.compile(`<!doctype html>
 <html>
 <body>
   <h1>{{tag}}</h1>
