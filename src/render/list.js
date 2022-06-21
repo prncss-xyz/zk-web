@@ -1,8 +1,8 @@
 import * as zk from '../utils.js';
 import * as templates from '../templates.js';
-import config from '../config.js';
 
-export async function render(path, args) {
+export async function render(path, query) {
+  const args = query.get('args').split(' ');
   const cmdArgs = ['list', '--format', '{{link}} {{title}}', args].flat();
   if (path.length > 0) {
     cmdArgs.push(path);
@@ -15,14 +15,14 @@ export async function render(path, args) {
       message: `list ${path} is empty`,
     };
 
-  // TODO: tree navigation
+  // TODO: views
 
   const items = [];
   for (const row of raw.split('\n')) {
     const res = row.match(/\[([^\[\]]+)\][^ ]* (.*)/);
     if (res) {
       let [, href, title] = res;
-      href = '/note/' + href;
+      href = encodeURI('/note/' + href);
       items.push({ href, title });
     }
   }

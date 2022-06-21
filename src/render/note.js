@@ -27,7 +27,7 @@ function transform() {
         alias = await fetchTitle(value);
       }
       node.data.hProperties.className = 'internal';
-      node.data.hProperties.href = '/note/' + value;
+      node.data.hProperties.href = encodeUri('/note/' + value);
       node.data.hChildren = [{ type: 'text', value: alias }];
     }
   };
@@ -50,7 +50,7 @@ async function fetchBacklinks(link) {
   const res = [];
   for (const [, link] of raw.matchAll(/\[([^\[\]]+)\]/g)) {
     const title = await fetchTitle(link);
-    const href = '/note/' + link;
+    const href = encodeURI('/note/' + link);
     res.push({ href, title });
   }
   return res;
@@ -77,7 +77,7 @@ export async function render(link) {
   let tags = data.tags ?? [];
   tags = tags.map((tag) => ({
     tag,
-    href: '/list/?args=--tag+' + tag,
+    href: encodeURI('/list/?args=--tag+' + tag),
   }));
   const record = {
     data,

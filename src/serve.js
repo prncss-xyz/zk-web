@@ -39,29 +39,25 @@ index.get('/tags', async (ctx) => {
   ctx.body = body;
 });
 index.get('/list(/)?(.*)', async (ctx) => {
-  const url = ctx.url.slice('/list'.length);
-  let link;
-  let args = [];
+  const url = decodeURI(ctx.url.slice('/list'.length));
+  let link, query;
   let qIndex = url.indexOf('?');
   if (qIndex === -1) {
     link = url;
+    query = new URLSearchParams('');
   } else {
     link = url.slice(1, qIndex);
-    const query = new URLSearchParams(url.slice(qIndex + 1));
+    query = new URLSearchParams(url.slice(qIndex + 1));
     if (query.get('alias')) {
-      args = config.alias?.[query.get('alias')];
-      if (typeof args == 'string') {
-        args = args.split(' ');
-      }
-      if (!args) {
+      query = config.alias?.[query.get('alias')];
+      if (!query) {
+        console.log(`unkdown alias: ${query.get('alias')}`);
         return;
       }
-    } else {
-      args = query.get('args')?.split(' ') || [];
     }
   }
   try {
-    const body = await renderList(link, args);
+    const body = await renderList(link, query);
     ctx.type = 'text/html';
     ctx.body = body;
   } catch (e) {
@@ -71,8 +67,9 @@ index.get('/list(/)?(.*)', async (ctx) => {
     }
   }
 });
+
 index.get('/note/(.+)', async (ctx) => {
-  const link = ctx.url.slice('/note/'.length);
+  const link = decodeURI(ctx.url.slice('/note/'.length));
   console.log('--', link);
   try {
     const body = await renderNote(link);
