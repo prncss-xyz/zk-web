@@ -2,6 +2,17 @@ import * as utils from '../utils.js';
 import * as templates from '../templates.js';
 
 export async function render(path, query) {
+  if (query.get('alias')) {
+    const alias = config.alias?.[query.get('alias')];
+    if (!query) {
+      throw {
+        code: 'ERR_NO_ALIAS',
+        message: `alias ${query.get('alias')} do not exist`,
+      };
+    }
+    query = new Map([...alias, ...query]);
+  }
+
   const args = query.get('args').split(' ');
   const cmdArgs = [
     'list',
@@ -41,7 +52,7 @@ export async function render(path, query) {
           items_.push(item);
         }
       }
-      console.log(items)
+      console.log(items);
       columns.push({ tag: utils.tag(tag), items: items_ });
     }
     console.log(path, columns);

@@ -48,23 +48,16 @@ index.get('/list(/)?(.*)', async (ctx) => {
   } else {
     link = url.slice(1, qIndex);
     query = new URLSearchParams(url.slice(qIndex + 1));
-    if (query.get('alias')) {
-      query = config.alias?.[query.get('alias')];
-      if (!query) {
-        console.log(`unkdown alias: ${query.get('alias')}`);
-        return;
-      }
-    }
   }
   try {
     const body = await renderList(link, query);
     ctx.type = 'text/html';
     ctx.body = body;
   } catch (e) {
-    console.log(e);
-    if (e.code !== 'ERR_NO_LIST') {
-      throw e;
-    }
+    if (e.code === 'ERR_NO_LIST') {
+      ctx.type = 'text/plain';
+      ctx.body = e.message;
+    } else throw e;
   }
 });
 
@@ -75,9 +68,10 @@ index.get('/note/(.+)', async (ctx) => {
     ctx.type = 'text/html';
     ctx.body = body;
   } catch (e) {
-    if (e.code !== 'ERR_NO_NOTE') {
-      throw e;
-    }
+    if (e.code === 'ERR_NO_ALIAS' || e.code === 'ERR_NO_NOTE') {
+      ctx.type = 'text/plain';
+      ctx.body = e.message;
+    } else throw e;
   }
 });
 
