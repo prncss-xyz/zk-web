@@ -28,12 +28,11 @@ export async function render(path, query) {
   let queryString = query.toString();
   if (queryString !== '') queryString = '?' + queryString;
   if (path !== '') {
-    const ndx = path.match(/[^\/]*$/).index;
+    const ndx = path.lastIndexOf('/');
     if (ndx) {
-      up = path.slice(1, ndx) + queryString;
+      up = '/list/' + path.slice(1, ndx) + queryString;
     }
   }
-
   const alias = Object.entries(config.alias).map(([name, value]) => {
     let queryNav = new URLSearchParams(query.toString());
     queryNav.set('alias', name);
@@ -76,11 +75,25 @@ export async function render(path, query) {
   const items = [];
   for (const row of raw.split('\n')) {
     if (row === '') continue;
-    let [href, title, tags] = row.split('\t');
-    [, href] = row.match(/\[([^\[\]]+)\]/);
-    href = encodeURI('/note/' + href);
-    items.push({ href, title, tags });
+    let [path, title, tags] = row.split('\t');
+    [, path] = row.match(/\[([^\[\]]+)\]/);
+    let href = encodeURI('/note/' + path);
+    items.push({ href, path, title, tags });
   }
+
+  const dirs = [];
+  for (const item of items) {
+    const ndx = item.path.lastIndexOf('/');
+    const dir = item.path.slice(0, ndx);
+    console.log(ndx, item.path, dir);
+    const dir_ = dirs.find((d) => d.dir == dir);
+    if (dir_) {
+      dir_.count++;
+    } else {
+      dirs.push({ dir, count: 1, href: '/list/' + dir });
+    }
+  }
+  console.log(dirs);
 
   const columns = [];
   if (query.get('view') === 'board') {
@@ -102,6 +115,7 @@ export async function render(path, query) {
 
   return templates.list({
     nav,
+    dirs,
     path,
     items,
   });

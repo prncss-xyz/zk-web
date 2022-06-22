@@ -29,6 +29,9 @@ export const list = Handlebars.compile(`<!doctype html>
       <a href={{href}}>{{name}}</a> 
     {{/each}}
     {{/with}}
+    {{#each dirs}}
+      <a href={{href}}>{{dir}}</a>
+    {{/each}}
   </div>
   <h1>{{tag}}</h1>
   <div id='tag-list'>
