@@ -43,6 +43,33 @@ export const list = Handlebars.compile(`<!doctype html>
 </html> 
 `);
 
+export const agenda = Handlebars.compile(`<!doctype html>
+<html>
+<body>
+  <div id='nav'>
+    {{#with nav}}
+    <a href={{home}}>home</a>
+    <a href={{up}}>up</a>
+    {{#each alias}}
+      <a href={{href}}>{{name}}</a> 
+    {{/each}}
+    {{/with}}
+    {{#each dirs}}
+      <a href={{href}}>{{dir}}</a>
+    {{/each}}
+  </div>
+  <h1>{{tag}}</h1>
+  <div id='tag-list'>
+  {{#each events}}
+  {{#with items}}
+    <a href="{{href}}"><div>{{date}} {{field}}: {{title}}</div></a>
+  {{/with}}
+  {{/events}}
+  </div>
+</body>
+</html> 
+`);
+
 export const board = Handlebars.compile(`<!doctype html>
 <html>
 <body>

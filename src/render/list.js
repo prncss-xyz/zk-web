@@ -17,10 +17,11 @@ export async function render(path, query) {
 
   if (args) args = args.trim().split(' ');
   else args = [];
+  // TODO: query only what is needed
   const cmdArgs = [
     'list',
     '--format',
-    '{{link}}\t{{title}}\t{{tags}}',
+    '{{link}}\t{{title}}\t{{tags}}\t{{metadata}}',
     args,
   ].flat();
 
@@ -75,17 +76,16 @@ export async function render(path, query) {
   const items = [];
   for (const row of raw.split('\n')) {
     if (row === '') continue;
-    let [path, title, tags] = row.split('\t');
+    let [path, title, tags, metadata] = row.split('\t');
     [, path] = row.match(/\[([^\[\]]+)\]/);
     let href = encodeURI('/note/' + path);
-    items.push({ href, path, title, tags });
+    items.push({ href, path, title, tags, metadata });
   }
 
   const dirs = [];
   for (const item of items) {
     const ndx = item.path.lastIndexOf('/');
     const dir = item.path.slice(0, ndx);
-    console.log(ndx, item.path, dir);
     const dir_ = dirs.find((d) => d.dir == dir);
     if (dir_) {
       dir_.count++;
@@ -93,23 +93,59 @@ export async function render(path, query) {
       dirs.push({ dir, count: 1, href: '/list/' + dir });
     }
   }
-  console.log(dirs);
 
-  const columns = [];
   if (query.get('view') === 'board') {
+    const columns = [];
     const tags = query.get('tags').split(' ');
     for (const tag of tags) {
-      let items_ = [];
+      const res = [];
       for (const item of items) {
         if (item.tags.indexOf(tag) !== -1) {
-          items_.push(item);
+          res.push(item);
         }
       }
-      columns.push({ tag: utils.tag(tag), items: items_ });
+      columns.push({ tag: utils.tag(tag), items: res });
     }
+    console.log(tags);
+    console.log(columns);
     return templates.board({
+      nav,
+      dirs,
+      path,
       path,
       columns,
+    });
+  }
+
+  // FIXME: won't work without LSP interface
+  if (query.get('view') === 'agenda') {
+    const fields = query.get('fields').split(' ');
+    const events = [];
+    for (const field of fields) {
+      for (const item of items) {
+        console.log(item.metadata, field);
+        const value = item.metadata?.[field];
+        if (value) {
+          console.log('!!', field, value);
+          const date = Number(new Date(value));
+          if (date) {
+            events.push({
+              item,
+              date,
+              value,
+              field,
+            });
+          }
+        }
+      }
+    }
+    events.sort((a, b) => a.date - b.date);
+    console.log(events);
+    return templates.agenda({
+      nav,
+      dirs,
+      path,
+      events,
     });
   }
 
