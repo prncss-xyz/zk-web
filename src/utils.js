@@ -34,3 +34,10 @@ export async function tags(link) {
   const raw = await zk(['list', '--format', '{{tags}}', link]);
   return raw;
 }
+
+export function tag(name) {
+  return {
+    name,
+    href: encodeURI('/list/?args=--tag+' + name),
+  };
+}

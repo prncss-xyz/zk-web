@@ -70,7 +70,6 @@ index.get('/list(/)?(.*)', async (ctx) => {
 
 index.get('/note/(.+)', async (ctx) => {
   const link = decodeURI(ctx.url.slice('/note/'.length));
-  console.log('--', link);
   try {
     const body = await renderNote(link);
     ctx.type = 'text/html';

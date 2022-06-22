@@ -12,7 +12,7 @@ import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
 import config from '../config.js';
 import * as templates from '../templates.js';
-import * as zk from '../utils.js';
+import * as utils from '../utils.js';
 
 function transform() {
   return async function (tree) {
@@ -27,7 +27,7 @@ function transform() {
         alias = await fetchTitle(value);
       }
       node.data.hProperties.className = 'internal';
-      node.data.hProperties.href = encodeUri('/note/' + value);
+      node.data.hProperties.href = encodeURI('/note/' + value);
       node.data.hChildren = [{ type: 'text', value: alias }];
     }
   };
@@ -46,7 +46,7 @@ const processor = unified()
   .use(rehypeFormat);
 
 async function fetchBacklinks(link) {
-  const raw = await zk.zk(['list', '--link-to', link, '--format', '{{link}}']);
+  const raw = await utils.zk(['list', '--link-to', link, '--format', '{{link}}']);
   const res = [];
   for (const [, link] of raw.matchAll(/\[([^\[\]]+)\]/g)) {
     const title = await fetchTitle(link);
@@ -57,14 +57,14 @@ async function fetchBacklinks(link) {
 }
 
 async function fetchTitle(link) {
-  let title = await zk.zk(['list', link, '--format', '{{title}}']);
+  let title = await utils.zk(['list', link, '--format', '{{title}}']);
   title = title.trim();
   if (title == '') title = link;
   return title;
 }
 
 export async function render(link) {
-  const raw = await zk.zk(['list', '--format', '{{raw-content}}', link]);
+  const raw = await utils.zk(['list', '--format', '{{raw-content}}', link]);
   if (raw == '')
     throw {
       code: 'ERR_NO_NOTE',
@@ -75,10 +75,7 @@ export async function render(link) {
   const content = String(contentAST);
   const backlinks = await fetchBacklinks(link);
   let tags = data.tags ?? [];
-  tags = tags.map((tag) => ({
-    tag,
-    href: encodeURI('/list/?args=--tag+' + tag),
-  }));
+  tags = tags.map(utils.tag);
   const record = {
     data,
     content,
