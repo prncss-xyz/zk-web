@@ -32,13 +32,14 @@ api.get('/stop', (ctx) => {
   });
 });
 
-const index = new Router();
-index.get('/tags', async (ctx) => {
+const router = new Router();
+router.get('/', (ctx) => ctx.redirect('/list'));
+router.get('/tags', async (ctx) => {
   const body = await renderTags();
   ctx.type = 'text/html';
   ctx.body = body;
 });
-index.get('/list(/)?(.*)', async (ctx) => {
+router.get('/list(/)?(.*)', async (ctx) => {
   const url = decodeURI(ctx.url.slice('/list'.length));
   let link, query;
   let qIndex = url.indexOf('?');
@@ -50,7 +51,7 @@ index.get('/list(/)?(.*)', async (ctx) => {
     query = new URLSearchParams(url.slice(qIndex + 1));
   }
   if (link !== '/' && link.endsWith('/')) {
-    link = link.slice(0, -1)
+    link = link.slice(0, -1);
   }
   try {
     const body = await renderList(link, query);
@@ -64,10 +65,10 @@ index.get('/list(/)?(.*)', async (ctx) => {
   }
 });
 
-index.get('/note/(.+)', async (ctx) => {
+router.get('/note/(.+)', async (ctx) => {
   let link = decodeURI(ctx.url.slice('/note/'.length));
   if (link !== '/' && link.endsWith('/')) {
-    link = link.slice(0, -1)
+    link = link.slice(0, -1);
   }
   try {
     const body = await renderNote(link);
@@ -85,7 +86,7 @@ const app = new Koa();
 app
   .use(logger)
   .use(onlyLocal)
-  .use(index.routes())
+  .use(router.routes())
   .use(mount('/api', api.routes()))
   .use(mount('/assets', koaStatic(resolve(config.dir, 'assets'))))
   .use(mount('/assets', koaStatic(resolve(process.env.HOME, config.assets))))
