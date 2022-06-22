@@ -46,8 +46,11 @@ index.get('/list(/)?(.*)', async (ctx) => {
     link = url;
     query = new URLSearchParams('');
   } else {
-    link = url.slice(1, qIndex);
+    link = url.slice(0, qIndex);
     query = new URLSearchParams(url.slice(qIndex + 1));
+  }
+  if (link !== '/' && link.endsWith('/')) {
+    link = link.slice(0, -1)
   }
   try {
     const body = await renderList(link, query);
@@ -62,7 +65,10 @@ index.get('/list(/)?(.*)', async (ctx) => {
 });
 
 index.get('/note/(.+)', async (ctx) => {
-  const link = decodeURI(ctx.url.slice('/note/'.length));
+  let link = decodeURI(ctx.url.slice('/note/'.length));
+  if (link !== '/' && link.endsWith('/')) {
+    link = link.slice(0, -1)
+  }
   try {
     const body = await renderNote(link);
     ctx.type = 'text/html';

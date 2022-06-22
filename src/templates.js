@@ -21,6 +21,15 @@ export const note = Handlebars.compile(`<!doctype html>
 export const list = Handlebars.compile(`<!doctype html>
 <html>
 <body>
+  <div id='nav'>
+    {{#with nav}}
+    <a href={{home}}>home</a>
+    <a href={{up}}>up</a>
+    {{#each alias}}
+      <a href={{href}}>{{name}}</a> 
+    {{/each}}
+    {{/with}}
+  </div>
   <h1>{{tag}}</h1>
   <div id='tag-list'>
   {{#each items}}

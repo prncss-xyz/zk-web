@@ -15,6 +15,7 @@ try {
 config.port ??= process.env.PORT ?? '3000';
 config.notes ??= '/zk';
 config.dir = dir;
+config.alias ??= {};
 
 console.log('config:', config);
 

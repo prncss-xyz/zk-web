@@ -18,21 +18,14 @@ export function zk(args) {
       if (code === 0) {
         resolve(stdout);
       } else {
-        reject({ errno: code, message: stderr });
+        reject({
+          code: 'ERR_ZK',
+          no: code,
+          message: stderr,
+        });
       }
     });
   });
-}
-
-export async function rawContent(link) {
-  const raw = await zk(['list', '--format', '{{raw-content}}', link]);
-  if (raw == '') throw Error('link does not exists');
-  return raw;
-}
-
-export async function tags(link) {
-  const raw = await zk(['list', '--format', '{{tags}}', link]);
-  return raw;
 }
 
 export function tag(name) {

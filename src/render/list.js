@@ -1,28 +1,70 @@
 import * as utils from '../utils.js';
 import * as templates from '../templates.js';
+import config from '../config.js';
 
 export async function render(path, query) {
+  let args = query.get('args') || '';
   if (query.get('alias')) {
-    const alias = config.alias?.[query.get('alias')];
-    if (!query) {
+    const alias = config.alias[query.get('alias')];
+    if (!alias) {
       throw {
         code: 'ERR_NO_ALIAS',
         message: `alias ${query.get('alias')} do not exist`,
       };
     }
-    query = new Map([...alias, ...query]);
+    args = alias + ' ' + args;
   }
 
-  const args = query.get('args').split(' ');
+  if (args) args = args.trim().split(' ');
+  else args = [];
   const cmdArgs = [
     'list',
     '--format',
     '{{link}}\t{{title}}\t{{tags}}',
     args,
   ].flat();
-  if (path.length > 0) {
-    cmdArgs.push(path);
+
+  let up;
+  let queryString = query.toString();
+  if (queryString !== '') queryString = '?' + queryString;
+  if (path !== '') {
+    const ndx = path.match(/[^\/]*$/).index;
+    if (ndx) {
+      up = path.slice(1, ndx) + queryString;
+    }
   }
+
+  const alias = Object.entries(config.alias).map(([name, value]) => {
+    let queryNav = new URLSearchParams(query.toString());
+    queryNav.set('alias', name);
+    const href = '/list' + path + '?' + queryNav.toString();
+    return {
+      name,
+      href,
+    };
+  });
+  let queryNav = new URLSearchParams(query.toString());
+  queryNav.delete('alias');
+  let str = queryNav.toString();
+  if (str !== '') str = '?' + str;
+  const href = '/list' + path + str;
+  alias.splice(0, 0, {
+    name: 'plain',
+    href,
+  });
+
+  const nav = {
+    href: '/list' + path + queryString,
+    home: '/list' + queryString,
+    up,
+    alias,
+  };
+  console.log(nav);
+
+  if (path.length > 0) {
+    cmdArgs.push(path.slice(1));
+  }
+
   console.log('zk', cmdArgs);
   const raw = await utils.zk(cmdArgs);
   if (raw == '')
@@ -30,8 +72,6 @@ export async function render(path, query) {
       code: 'ERR_NO_LIST',
       message: `list ${path} is empty`,
     };
-
-  // TODO: views
 
   const items = [];
   for (const row of raw.split('\n')) {
@@ -52,10 +92,8 @@ export async function render(path, query) {
           items_.push(item);
         }
       }
-      console.log(items);
       columns.push({ tag: utils.tag(tag), items: items_ });
     }
-    console.log(path, columns);
     return templates.board({
       path,
       columns,
@@ -63,6 +101,7 @@ export async function render(path, query) {
   }
 
   return templates.list({
+    nav,
     path,
     items,
   });
