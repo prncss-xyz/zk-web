@@ -17,6 +17,7 @@ import * as utils from '../utils.js';
 
 function transform() {
   return async function (tree) {
+    const once = new Set();
     const nodes = [];
     visit(tree, 'wikiLink', (node) => {
       nodes.push(node);
@@ -29,6 +30,11 @@ function transform() {
       }
       node.data.hProperties.className = 'internal';
       node.data.hProperties.href = encodeURI('/note/' + value);
+      // we don't want two elements with same id on one page
+      if (!once.has(value)) {
+        node.data.hProperties.id = encodeURI(value);
+        once.add(value);
+      }
       node.data.hChildren = [{ type: 'text', value: alias }];
     }
   };
@@ -57,9 +63,9 @@ async function fetchBacklinks(link) {
     '{{link}}',
   ]);
   const res = [];
-  for (const [, link] of raw.matchAll(/\[([^\[\]]+)\]/g)) {
-    const title = await fetchTitle(link);
-    const href = encodeURI('/note/' + link);
+  for (const [, link_] of raw.matchAll(/\[([^\[\]]+)\]/g)) {
+    const title = await fetchTitle(link_);
+    const href = encodeURI('/note/' + link_ + '#' + link);
     res.push({ href, title });
   }
   return res;
