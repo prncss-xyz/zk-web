@@ -7,10 +7,11 @@ import emoji from 'remark-emoji';
 import gfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
+import removeComments from 'remark-remove-comments';
+import smartyPants from 'remark-smartypants';
 import wikiLink from 'remark-wiki-link';
 import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
-import config from '../config.js';
 import * as templates from '../templates.js';
 import * as utils from '../utils.js';
 
@@ -40,13 +41,21 @@ const processor = unified()
   .use(breaks)
   .use(emoji)
   .use(gfm)
+  .use(smartyPants)
+  .use(removeComments)
   .use(remarkRehype, { allowDangerousHtml: true })
   .use(rehypeRaw)
   .use(rehypeStringify)
   .use(rehypeFormat);
 
 async function fetchBacklinks(link) {
-  const raw = await utils.zk(['list', '--link-to', link, '--format', '{{link}}']);
+  const raw = await utils.zk([
+    'list',
+    '--link-to',
+    link,
+    '--format',
+    '{{link}}',
+  ]);
   const res = [];
   for (const [, link] of raw.matchAll(/\[([^\[\]]+)\]/g)) {
     const title = await fetchTitle(link);
