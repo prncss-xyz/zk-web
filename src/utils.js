@@ -31,6 +31,6 @@ export function zk(args) {
 export function tag(name) {
   return {
     name,
-    href: encodeURI('/list/?args=--tag+' + name),
+    href: encodeURI('/list?args=--tag+' + name),
   };
 }

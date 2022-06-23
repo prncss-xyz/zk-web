@@ -1,8 +1,40 @@
 import Handlebars from 'handlebars';
+import { h } from 'hastscript';
+import { toHtml } from 'hast-util-to-html';
+import * as utils from './utils.js';
+
+// TODO: use hastscript
+function translateTags(array) {
+  console.log(array, Array.isArray(array));
+  if (!Array.isArray(array)) return array;
+  return array.map((tag) =>
+    typeof tag === 'string' ? h('a', { href: utils.tag(tag).href }, tag) : tag,
+  );
+}
+
+function td(value) {
+  if (typeof value === 'string') return h('td.string', value);
+  if (typeof value === 'number') return h('td.number', value);
+  if (value instanceof Date) return h('td.string', String(value));
+  return h('td.object', JSON.stringify(value));
+}
+
+Handlebars.registerHelper('meta', (obj) => {
+  let res = [];
+  for (const [key, value] of Object.entries(obj)) {
+    let valueCell;
+    if (key == 'tags') valueCell = h('td', translateTags(value));
+    else if (key == 'keywords') valueCell = h('td', translateTags(value));
+    else valueCell = td(value);
+    res.push(h('tr', [h('td', key), valueCell]));
+  }
+  return toHtml(h('table', res));
+});
 
 export const note = Handlebars.compile(`<!doctype html>
 <html>
 <body>
+  {{{meta data}}}
   <div id='nav-tags'>
     {{#each tags}}
       <a href={{href}}><div>{{name}}</div></a>
@@ -23,9 +55,11 @@ export const list = Handlebars.compile(`<!doctype html>
 <body>
   <div id='nav'>
     {{#with nav}}
+    <a href="/tags">tags</a>
     <a href={{home}}>home</a>
     <a href={{up}}>up</a>
-    {{#each alias}}
+    <a href={{plain}}>plain</a> 
+    {{#each views}}
       <a href={{href}}>{{name}}</a> 
     {{/each}}
     {{/with}}
@@ -89,6 +123,9 @@ export const board = Handlebars.compile(`<!doctype html>
 export const tags = Handlebars.compile(`<!doctype html>
 <html>
 <body>
+  <div id='nav'>
+  <a href="/list">list</a>
+  </div>
   <h1>Tags</h1>
   <div id={{note-list}}>
   {{#each items}}

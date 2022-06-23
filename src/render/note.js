@@ -89,13 +89,11 @@ export async function render(link) {
   const contentAST = await processor.process(contentMd);
   const content = String(contentAST);
   const backlinks = await fetchBacklinks(link);
-  let tags = data.tags ?? [];
-  tags = tags.map(utils.tag);
+  // TODO: test if value is string
   const record = {
     data,
     content,
     backlinks,
-    tags,
   };
   return templates.note(record);
 }

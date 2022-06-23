@@ -40,7 +40,8 @@ router.get('/tags', async (ctx) => {
   ctx.body = body;
 });
 router.get('/list(/)?(.*)', async (ctx) => {
-  const url = decodeURI(ctx.url.slice('/list'.length));
+  const url = ctx.url.slice('/list'.length);
+  // const url = decodeURI(ctx.url.slice('/list'.length));
   let link, query;
   let qIndex = url.indexOf('?');
   if (qIndex === -1) {

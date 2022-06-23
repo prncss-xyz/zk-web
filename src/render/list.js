@@ -4,16 +4,6 @@ import config from '../config.js';
 
 export async function render(path, query) {
   let args = query.get('args') || '';
-  if (query.get('alias')) {
-    const alias = config.alias[query.get('alias')];
-    if (!alias) {
-      throw {
-        code: 'ERR_NO_ALIAS',
-        message: `alias ${query.get('alias')} do not exist`,
-      };
-    }
-    args = alias + ' ' + args;
-  }
 
   if (args) args = args.trim().split(' ');
   else args = [];
@@ -28,38 +18,40 @@ export async function render(path, query) {
   let up;
   let queryString = query.toString();
   if (queryString !== '') queryString = '?' + queryString;
+  if (path === '/') path = '';
   if (path !== '') {
     const ndx = path.lastIndexOf('/');
     if (ndx) {
       up = '/list/' + path.slice(1, ndx) + queryString;
+    } else {
+      up = '/list' + queryString;
     }
   }
-  const alias = Object.entries(config.alias).map(([name, value]) => {
+  const plain = '/list' + path;
+
+  const views = [];
+  for (const [name, value] of Object.entries(config.views || {})) {
     let queryNav = new URLSearchParams(query.toString());
-    queryNav.set('alias', name);
+    for (let [k, v] of Object.entries(value)) {
+      if (typeof v === 'object') {
+        v = v.join(' ');
+      }
+      queryNav.set(k, v);
+    }
     const href = '/list' + path + '?' + queryNav.toString();
-    return {
+    views.push({
       name,
       href,
-    };
-  });
-  let queryNav = new URLSearchParams(query.toString());
-  queryNav.delete('alias');
-  let str = queryNav.toString();
-  if (str !== '') str = '?' + str;
-  const href = '/list' + path + str;
-  alias.splice(0, 0, {
-    name: 'plain',
-    href,
-  });
+    });
+  }
 
   const nav = {
     href: '/list' + path + queryString,
     home: '/list' + queryString,
     up,
-    alias,
+    plain,
+    views,
   };
-  console.log(nav);
 
   if (path.length > 0) {
     cmdArgs.push(path.slice(1));
@@ -106,8 +98,6 @@ export async function render(path, query) {
       }
       columns.push({ tag: utils.tag(tag), items: res });
     }
-    console.log(tags);
-    console.log(columns);
     return templates.board({
       nav,
       dirs,
@@ -123,10 +113,8 @@ export async function render(path, query) {
     const events = [];
     for (const field of fields) {
       for (const item of items) {
-        console.log(item.metadata, field);
         const value = item.metadata?.[field];
         if (value) {
-          console.log('!!', field, value);
           const date = Number(new Date(value));
           if (date) {
             events.push({
@@ -140,7 +128,6 @@ export async function render(path, query) {
       }
     }
     events.sort((a, b) => a.date - b.date);
-    console.log(events);
     return templates.agenda({
       nav,
       dirs,
