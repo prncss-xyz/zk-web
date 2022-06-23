@@ -15,19 +15,20 @@ export async function render(path, query) {
     args,
   ].flat();
 
+  if (path[0] === '/') path = path.slice(1);
+
   let up;
   let queryString = query.toString();
   if (queryString !== '') queryString = '?' + queryString;
-  if (path === '/') path = '';
   if (path !== '') {
     const ndx = path.lastIndexOf('/');
     if (ndx) {
       up = '/list/' + path.slice(1, ndx) + queryString;
     } else {
-      up = '/list' + queryString;
+      up = '/list/' + queryString;
     }
   }
-  const plain = '/list' + path;
+  const plain = '/list/' + path;
 
   const views = [];
   for (const [name, value] of Object.entries(config.views || {})) {
@@ -38,7 +39,7 @@ export async function render(path, query) {
       }
       queryNav.set(k, v);
     }
-    const href = '/list' + path + '?' + queryNav.toString();
+    const href = '/list/' + path + '?' + queryNav.toString();
     views.push({
       name,
       href,
@@ -46,15 +47,16 @@ export async function render(path, query) {
   }
 
   const nav = {
-    href: '/list' + path + queryString,
-    home: '/list' + queryString,
+    path,
+    href: '/list/' + path + queryString,
+    home: '/list/' + queryString,
     up,
     plain,
     views,
   };
 
   if (path.length > 0) {
-    cmdArgs.push(path.slice(1));
+    cmdArgs.push(path);
   }
 
   console.log('zk', cmdArgs);
@@ -101,14 +103,13 @@ export async function render(path, query) {
     return templates.board({
       nav,
       dirs,
-      path,
-      path,
+      path: path || '~',
       columns,
     });
   }
 
-  // FIXME: won't work without LSP interface
-  if (query.get('view') === 'agenda') {
+  // NOTE: currently not in use, will need LSP API
+  if (false && query.get('view') === 'agenda') {
     const fields = query.get('fields').split(' ');
     const events = [];
     for (const field of fields) {
@@ -131,7 +132,7 @@ export async function render(path, query) {
     return templates.agenda({
       nav,
       dirs,
-      path,
+      path: path || '~',
       events,
     });
   }
@@ -139,7 +140,7 @@ export async function render(path, query) {
   return templates.list({
     nav,
     dirs,
-    path,
+    path: path || '~',
     items,
   });
 }
