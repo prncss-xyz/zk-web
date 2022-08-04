@@ -6,11 +6,13 @@ specifiers:
   gray-matter: ^4.0.3
   handlebars: ^4.7.7
   hast-util-to-html: ^8.0.3
+  hast-util-to-text: ^3.1.1
   hastscript: ^7.0.2
   js-yaml: ^4.1.0
   koa: ^2.13.4
   koa-mount: ^4.0.0
   koa-static: ^5.0.0
+  recursive: ^0.0.2
   rehype-document: ^6.0.1
   rehype-format: ^4.0.1
   rehype-raw: ^6.1.1
@@ -26,7 +28,11 @@ specifiers:
   remark-wiki-link: ^1.0.4
   unified: ^10.1.2
   unist-builder: ^3.0.0
+  unist-util-flatmap: ^1.0.0
+  unist-util-remove: ^3.1.0
   unist-util-visit: ^4.1.0
+  unist-util-visit-parents: ^5.1.0
+  words-count: ^2.0.2
   xdg-basedir: ^5.1.0
 
 dependencies:
@@ -35,11 +41,13 @@ dependencies:
   gray-matter: 4.0.3
   handlebars: 4.7.7
   hast-util-to-html: 8.0.3
+  hast-util-to-text: 3.1.1
   hastscript: 7.0.2
   js-yaml: 4.1.0
   koa: 2.13.4
   koa-mount: 4.0.0
   koa-static: 5.0.0
+  recursive: 0.0.2
   rehype-document: 6.0.1
   rehype-format: 4.0.1
   rehype-raw: 6.1.1
@@ -55,7 +63,11 @@ dependencies:
   remark-wiki-link: 1.0.4
   unified: 10.1.2
   unist-builder: 3.0.0
+  unist-util-flatmap: 1.0.0
+  unist-util-remove: 3.1.0
   unist-util-visit: 4.1.0
+  unist-util-visit-parents: 5.1.0
+  words-count: 2.0.2
   xdg-basedir: 5.1.0
 
 packages:
@@ -468,6 +480,14 @@ packages:
       property-information: 6.1.1
       web-namespaces: 2.0.1
       zwitch: 2.0.2
+    dev: false
+
+  /hast-util-to-text/3.1.1:
+    resolution: {integrity: sha512-7S3mOBxACy8syL45hCn3J7rHqYaXkxRfsX6LXEU5Shz4nt4GxdjtMUtG+T6G/ZLUHd7kslFAf14kAN71bz30xA==}
+    dependencies:
+      '@types/hast': 2.3.4
+      hast-util-is-element: 2.1.2
+      unist-util-find-after: 4.0.0
     dev: false
 
   /hast-util-whitespace/2.0.0:
@@ -1228,6 +1248,10 @@ packages:
     resolution: {integrity: sha512-hrzC564QIl0r0vy4l6MvRLhafmUowhO/O3KgVSoXIbbA2Sz4j8HGpJc6T2cubRVwMwpdiG/vKGfhT4IixmKN9w==}
     dev: false
 
+  /recursive/0.0.2:
+    resolution: {integrity: sha512-Cxm4k0F6cs5ErKLS3xzDVpKr0tr860h9tuDRQLgl3wa56qDsky10fxtImmrt+a1w6q11YTGrYxHZNupdkoGoYQ==}
+    dev: false
+
   /regenerator-runtime/0.13.9:
     resolution: {integrity: sha512-p3VT+cOEgxFsRRA9X4lkI1E+k2/CtnKtU4gcxyaCUreilL/vqI6CdZ3wxVUx3UOUg+gnUOQQcRI7BmSI656MYA==}
     dev: false
@@ -1524,6 +1548,17 @@ packages:
       '@types/unist': 2.0.6
     dev: false
 
+  /unist-util-find-after/4.0.0:
+    resolution: {integrity: sha512-gfpsxKQde7atVF30n5Gff2fQhAc4/HTOV4CvkXpTg9wRfQhZWdXitpyXHWB6YcYgnsxLx+4gGHeVjCTAAp9sjw==}
+    dependencies:
+      '@types/unist': 2.0.6
+      unist-util-is: 5.1.1
+    dev: false
+
+  /unist-util-flatmap/1.0.0:
+    resolution: {integrity: sha512-IG32jcKJlhARCYT2LsYPJWdoXYkzz3ESAdl1aa2hn9Auh+cgUmU6wgkII4yCc/1GgeWibRdELdCZh/p3QKQ1dQ==}
+    dev: false
+
   /unist-util-generated/2.0.0:
     resolution: {integrity: sha512-TiWE6DVtVe7Ye2QxOVW9kqybs6cZexNwTwSMVgkfjEReqy/xwGpAXb99OxktoWwmL+Z+Epb0Dn8/GNDYP1wnUw==}
     dev: false
@@ -1546,6 +1581,14 @@ packages:
     resolution: {integrity: sha512-p/5EMGIa1qwbXjA+QgcBXaPWjSnZfQ2Sc3yBEEfgPwsEmJd8Qh+DSk3LGnmOM4S1bY2C0AjmMnB8RuEYxpPwXQ==}
     dependencies:
       '@types/unist': 2.0.6
+    dev: false
+
+  /unist-util-remove/3.1.0:
+    resolution: {integrity: sha512-rO/sIghl13eN8irs5OBN2a4RC10MsJdiePCfwrvnzGtgIbHcDXr2REr0qi9F2r/CIb1r9FyyFmcMRIGs+EyUFw==}
+    dependencies:
+      '@types/unist': 2.0.6
+      unist-util-is: 5.1.1
+      unist-util-visit-parents: 5.1.0
     dev: false
 
   /unist-util-stringify-position/3.0.2:
@@ -1644,6 +1687,10 @@ packages:
 
   /web-namespaces/2.0.1:
     resolution: {integrity: sha512-bKr1DkiNa2krS7qxNtdrtHAmzuYGFQLiQ13TsorsdT6ULTkPLKuu5+GsFpDlg6JFjUTwX2DyhMPG2be8uPrqsQ==}
+    dev: false
+
+  /words-count/2.0.2:
+    resolution: {integrity: sha512-u0LFfJPhnR0xXu/5WoqWIkgdGJst5GahS4lYy4G5TIX4JAQgeNKD33HpmMoxveVBWNS6W6YZV2OQjVIVLL4K7Q==}
     dev: false
 
   /wordwrap/1.0.0:

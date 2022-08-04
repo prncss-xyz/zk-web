@@ -34,3 +34,21 @@ export function tag(name) {
     href: encodeURI('/list?args=--tag+' + name),
   };
 }
+
+export function groupBy(field, items) {
+  const res = {};
+  for (const item of items) {
+    if (field in item) {
+      const key = item[field];
+      res[key] ??= [];
+      res[key].push(item);
+    }
+  }
+  return res;
+}
+
+export function isSubtag(long, short) {
+  if (long === short) return true;
+  if (long.startsWith(short + '/')) return true;
+  return false;
+}

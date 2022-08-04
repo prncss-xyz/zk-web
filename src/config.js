@@ -17,6 +17,4 @@ config.notes ??= '/zk';
 config.dir = dir;
 config.alias ??= {};
 
-console.log('config:', config);
-
 export default config;

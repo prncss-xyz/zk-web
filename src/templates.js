@@ -5,7 +5,7 @@ import * as utils from './utils.js';
 
 // TODO: use hastscript
 function translateTags(array) {
-  console.log(array, Array.isArray(array));
+  // console.log(array, Array.isArray(array));
   if (!Array.isArray(array)) return array;
   return array.map((tag) =>
     typeof tag === 'string' ? h('a', { href: utils.tag(tag).href }, tag) : tag,
@@ -19,9 +19,14 @@ function td(value) {
   return h('td.object', JSON.stringify(value));
 }
 
+// TODO: title and other metadatas
 Handlebars.registerHelper('page', function (options) {
   return new Handlebars.SafeString(`<!doctype html><html>
-  <body>
+  <head>
+    <link rel="stylesheet" href="/assets/github-markdown.css">
+    <link rel="stylesheet" href="/assets/stylesheet.css">
+  </head>
+  <body class="markdown-body">
     ${options.fn(this)}
   </body>
 </html>`);
@@ -82,15 +87,42 @@ export const list = Handlebars.compile(`{{#page}}
   </div>
 {{/page}}`);
 
+export const tags_ = Handlebars.compile(`{{#page}}
+  {{> listNav}}
+  <h1>{{path}}</h1>
+  <div id="tags">
+  {{#each columns}}
+    <div class="column">
+      <a class="column-title" href="{{tag.href}}"><div>{{tag.name}}</div></a>
+      {{#each this.sections}}
+        <div class="section">
+          <a class="section-title" href="{{this.href}}"><div>{{this.dir}}</div></a>
+          {{#each this.items}}
+            <a class="item" href="{{href}}"><div>{{title}}</div></a>
+          {{/each}}
+        </div>
+      {{/each}}
+    </div>
+  {{/each}}
+  </div>
+{{/page}}`);
+
 export const board = Handlebars.compile(`{{#page}}
   {{> listNav}}
   <h1>{{path}}</h1>
-  <div id='board'>
+  <div id="board">
   {{#each columns}}
-    <a class='column' href="{{tag.href}}"><div>{{tag.name}}</div></a>
-    {{#each this.items}}
-      <a class='item' href="{{href}}"><div>{{title}}</div></a>
-    {{/each}}
+    <div class="column">
+      <a class="column-title" href="{{tag.href}}"><div>{{tag.name}}</div></a>
+      {{#each this.sections}}
+        <div class="section">
+          <a class="section-title" href="{{this.href}}"><div>{{this.dir}}</div></a>
+          {{#each this.items}}
+            <a class="item" href="{{href}}"><div>{{title}}</div></a>
+          {{/each}}
+        </div>
+      {{/each}}
+    </div>
   {{/each}}
   </div>
 {{/page}}`);

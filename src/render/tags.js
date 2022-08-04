@@ -1,7 +1,7 @@
 import * as utils from '../utils.js';
 import * as templates from '../templates.js';
 
-export async function render(tag) {
+export async function render() {
   const raw = await utils.zk(['tag', 'list']);
 
   const items = [];

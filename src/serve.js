@@ -7,6 +7,7 @@ import { render as renderNote } from './render/note.js';
 import { render as renderList } from './render/list.js';
 import { render as renderTags } from './render/tags.js';
 import { resolve } from 'path';
+import parse from './parse.js'
 
 async function logger(ctx, next) {
   console.log(ctx.method, ctx.url);
@@ -75,6 +76,23 @@ router.get('/note/(.+)', async (ctx) => {
     const body = await renderNote(link);
     ctx.type = 'text/html';
     ctx.body = body;
+  } catch (e) {
+    if (e.code === 'ERR_NO_ALIAS' || e.code === 'ERR_NO_NOTE') {
+      ctx.type = 'text/plain';
+      ctx.body = e.message;
+    } else throw e;
+  }
+});
+
+router.get('/parse/(.+)', async (ctx) => {
+  let link = decodeURI(ctx.url.slice('/note/'.length));
+  if (link !== '/' && link.endsWith('/')) {
+    link = link.slice(0, -1);
+  }
+  try {
+    const json = await parse(link);
+    ctx.type = 'application/json';
+    ctx.body = JSON.stringify(json);
   } catch (e) {
     if (e.code === 'ERR_NO_ALIAS' || e.code === 'ERR_NO_NOTE') {
       ctx.type = 'text/plain';

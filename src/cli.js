@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { program } from 'commander';
-import { render } from './render.js';
+import { render } from './render/note.js';
 import serve from './serve.js';
 
 program.command('html <link>').action(async (link) => {

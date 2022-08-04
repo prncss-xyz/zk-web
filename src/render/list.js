@@ -1,6 +1,21 @@
 import * as utils from '../utils.js';
 import * as templates from '../templates.js';
 import config from '../config.js';
+import { dirname } from 'node:path';
+import { groupBy, isSubtag } from '../utils.js';
+
+export async function tagList() {
+  const raw = await utils.zk(['tag', 'list']);
+
+  const tags = [];
+  for (const row of raw.split('\n')) {
+    const res = row.match(/(\S+) \((.+)\)/);
+    if (res) {
+      tags.push(res[1]);
+    }
+  }
+  return tags;
+}
 
 export async function render(path, query) {
   let args = query.get('args') || '';
@@ -29,6 +44,8 @@ export async function render(path, query) {
     }
   }
   const plain = '/list/' + path;
+
+  const queryTags = query.get('tags')?.split(' ') ?? [];
 
   const views = [];
   for (const [name, value] of Object.entries(config.views || {})) {
@@ -90,15 +107,25 @@ export async function render(path, query) {
 
   if (query.get('view') === 'board') {
     const columns = [];
-    const tags = query.get('tags').split(' ');
-    for (const tag of tags) {
+    for (const tag of queryTags) {
       const res = [];
+      console.log(items)
       for (const item of items) {
         if (item.tags.indexOf(tag) !== -1) {
+          item.dir = dirname(item.path);
           res.push(item);
         }
       }
-      columns.push({ tag: utils.tag(tag), items: res });
+      if (res.length === 0) {
+        continue;
+      }
+      const sections = Object.entries(groupBy('dir', res))
+        .map(([dir, items]) => ({
+          dir,
+          items,
+        }))
+        .sort((a, b) => a.dir.localeCompare(b.dir));
+      columns.push({ tag: utils.tag(tag), items: res, sections });
     }
     return templates.board({
       nav,
