@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { resolve, join } from 'path';
 import { load } from 'js-yaml';
-import { xdgConfig } from 'xdg-basedir';
+import { xdgConfig, xdgData } from 'xdg-basedir';
 
 const name = 'zk-web';
 
@@ -16,5 +16,9 @@ config.port ??= process.env.PORT ?? '3000';
 config.notes ??= '/zk';
 config.dir = dir;
 config.alias ??= {};
+config.notebookDir ??= process.env.ZK_NOTEBOOK_DIR;
+config.noteExtension ??= '.md';
+config.dbDir = join(xdgData, name);
+config.dbFile = join(config.dbDir, 'db.db');
 
 export default config;

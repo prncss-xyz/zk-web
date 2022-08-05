@@ -11,13 +11,26 @@ import smartyPants from 'remark-smartypants';
 import wikiLink from 'remark-wiki-link';
 import { unified } from 'unified';
 import { visitParents } from 'unist-util-visit-parents';
-import flatMap from 'unist-util-flatmap';
 import { toHtml } from 'hast-util-to-html';
 import { toText } from 'hast-util-to-text';
 import { remove } from 'unist-util-remove';
+import { visit } from 'unist-util-visit';
 import pkg from 'words-count';
 const { wordsCount } = pkg;
+import config from './config.js';
+const { notebookDir, noteExtension } = config;
 
+function transform() {
+  return async function (tree) {
+    visit(tree, 'wikiLink', (node) => {
+      node.data.hProperties.className = 'internal';
+      node.data.hProperties.href = node.data.alias + config.noteExtension;
+      node.data.hChildren = [];
+    });
+  };
+}
+
+// TODO: assets
 function analyse(tree) {
   const links = [];
   let title;
@@ -36,26 +49,22 @@ function analyse(tree) {
         --i;
         const ancestor = ancestors[i];
         // finds the enclosing p
-        if (ancestor.tagName === 'p' && ancestor.type === 'element') {
-          // replaces the link node with a dummy <this></this> element
-          const contextAST = flatMap(ancestor, (node_) => {
-            if (node === node_) {
-              return [
-                {
-                  type: 'element',
-                  tagName: 'this',
-                },
-              ];
-            }
-            return [node_];
+        if (
+          (['p', 'li', 'dt', 'dd'].includes(ancestor.tagName) &&
+            ancestor.type === 'element') ||
+          i === 1
+        ) {
+          context = toHtml({
+            type: 'element',
+            tagName: 'div',
+            children: ancestor.children,
           });
-          context = toHtml(contextAST);
           break;
         }
       }
       links.push({
         context,
-        href: node.properties.href.slice(7),
+        href: node.properties.href,
         position: node.position,
         title,
       });
@@ -79,6 +88,7 @@ function spit() {
 
 const processor = unified()
   .use(remarkParse)
+  .use(transform)
   .use(wikiLink)
   .use(breaks)
   .use(emoji)
@@ -89,12 +99,8 @@ const processor = unified()
   .use(rehypeRaw)
   .use(spit);
 
-const source = process.env.ZK_NOTEBOOK_DIR;
-const ext = '.md';
-
-export default async function parse(id) {
-  const absPath = source + id + ext;
-  id = id.slice(1);
+export async function parseFromId(id) {
+  const absPath = notebookDir + id + noteExtension;
   let raw;
   try {
     raw = await fs.readFile(absPath, 'utf-8');
@@ -102,21 +108,29 @@ export default async function parse(id) {
     if (error.code !== 'ENOENT') return;
     else throw error;
   }
+  return parse(raw);
+
+  // const id_ = id.slice(1);
+  // id: id_,
+  // path: id_ + note_extension,
+}
+
+export async function parse(raw) {
   const { data, content: contentMd, matter: rawMatter } = matter(raw);
-  const lines = (rawMatter.match(/\n/g) || '').length + 1;
-  const offset = rawMatter.length;
-  // correct position with frontmatter
   const { result } = await processor.process(contentMd);
-  for (const link of result.links) {
-    link.position.start.line += lines;
-    link.position.start.offset += offset;
-    link.position.end.line += lines;
-    link.position.end.offset += offset;
+  if (rawMatter) {
+    const lines = (rawMatter.match(/\n/g) || '').length + 1;
+    const offset = rawMatter.length;
+    // correct position with frontmatter
+    for (const link of result.links) {
+      link.position.start.line += lines;
+      link.position.start.offset += offset;
+      link.position.end.line += lines;
+      link.position.end.offset += offset;
+    }
   }
   return {
-    id,
     meta: data,
-    absPath,
     ...result,
   };
 }
