@@ -1,7 +1,7 @@
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import config from './config.js';
-import { sql_escape, connect, exec, all, close } from './db.js';
+import { escape_value, connect, exec, all, close } from './db.js';
 import { getFiles } from './file-utils.js';
 
 function isInside(parent, dir) {
@@ -55,7 +55,7 @@ export async function scanAssets() {
           exec(
             `
               DELETE FROM orphan_assets
-              WHERE id=${sql_escape(asset.asset)};
+              WHERE id=${escape_value(asset.asset)};
             `,
           ),
         );
@@ -86,8 +86,8 @@ export async function scanAssets() {
                 time
               )
               VALUES (
-                ${sql_escape(filename)},
-                ${sql_escape(time)}
+                ${escape_value(filename)},
+                ${escape_value(time)}
               );
             `,
           ),

@@ -95,7 +95,8 @@ export default async function query(id) {
       end_line,
       end_column,
       end_offset,
-      context
+      context,
+      rank
     FROM links
     WHERE target = ?
     `,

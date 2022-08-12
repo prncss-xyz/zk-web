@@ -1,6 +1,7 @@
 import sqlite3 from 'sqlite3';
 import config from './config.js';
 import fs from 'node:fs/promises';
+import { snakeCase } from 'change-case';
 
 let db;
 
@@ -43,14 +44,43 @@ export async function close() {
   });
 }
 
-// single-quote escape for sql
-export function sql_escape(value) {
+// pascal double-quote escape
+// escape sql identifiers
+export function escape_id(value) {
+  return '"' + String(value).replace(/\"/g, '""') + '"';
+}
+
+// pascal single-quote escape
+function escape_single(str) {
+  return "'" + str.replace(/\'/g, "''") + "'";
+}
+
+// escape sql values
+export function escape_value(value) {
   if (value === null) return 'NULL';
   if (value === undefined) return 'NULL';
+  if (value instanceof Date) return escape_single(value.toISOString());
+  if (typeof value === 'string') {
+    return escape_single(value);
+  }
   if (typeof value === 'number') {
     return value;
   }
-  return "'" + String(value).replace(/\'/g, "''") + "'";
+  return escape_single(JSON.stringify(value));
+}
+
+export function insertStr(table, obj) {
+  const keys = [];
+  const values = [];
+  for (const [key, value] of Object.entries(obj)) {
+    keys.push(escape_id(snakeCase(key)));
+    values.push(escape_value(value));
+  }
+  if (keys.length === 0) return '';
+  return `
+    INSERT OR REPLACE INTO ${table} (${keys.join(', ')})
+    VALUES (${values.join(', ')});
+  `;
 }
 
 export function exec(query) {

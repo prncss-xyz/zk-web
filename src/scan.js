@@ -1,22 +1,10 @@
 import fs from 'node:fs/promises';
 import config from './config.js';
 import { parse } from './parse.js';
-import { sql_escape, connect, exec, all, close } from './db.js';
+import { escape_value, connect, exec, all, close, insertStr } from './db.js';
 import { join, getFiles, getChecksum } from './file-utils.js';
 
 let updateCount;
-
-function updateNote(obj) {
-  const entries = Object.entries(obj);
-  return `
-  INSERT OR REPLACE INTO notes (${entries.map(([key]) => key).join(',')})
-  VALUES (${entries.map(([_, value]) => sql_escape(value)).join(',')});
-  DELETE FROM links
-  WHERE source=${sql_escape(obj.id)};
-  DELETE FROM tags
-  WHERE source=${sql_escape(obj.id)};
-  `;
-}
 
 async function scanFile_(noteIndex, base, id) {
   const { ctimeMs, birthtime } = await fs.stat(join(base, id));
@@ -25,56 +13,31 @@ async function scanFile_(noteIndex, base, id) {
   const raw = await fs.readFile(join(base, id), 'utf-8');
   const checksum = getChecksum(raw);
   if (note?.checksum === checksum) return;
-  console.log('updating ' + id);
   updateCount++;
+  console.log('updating', id);
   let transaction = 'BEGIN TRANSACTION;\n';
-  const { title, meta, links, wordcount } = await parse(raw);
-  transaction += updateNote({
+  const parsed = await parse(raw, id);
+  const noteEntry = {
     id,
     ctimeMs,
     checksum,
-    title,
-    date: meta.date ?? birthtime,
-    asset: meta.asset,
-    wordcount,
-  });
-  for (const link of links) {
-    transaction += `
-      INSERT INTO links (
-        target,
-        source,
-        start_line,
-        start_column,
-        start_offset,
-        end_line, 
-        end_column,
-        end_offset,
-        context
-      )
-      VALUES (
-        ${sql_escape(link.href)},
-        ${sql_escape(id)},
-        ${link.position.start.line},
-        ${link.position.start.column},
-        ${link.position.start.offset},
-        ${link.position.end.line},
-        ${link.position.end.column},
-        ${link.position.end.offset},
-        ${sql_escape(link.context)}
-      );
-    `;
+    date: birthtime,
+    ...parsed.note,
+  };
+  transaction += insertStr('notes', noteEntry);
+  transaction += `
+  DELETE FROM links
+  WHERE source=${escape_value(id)};
+  `;
+  for (const link of parsed.links) {
+    transaction += insertStr('links', link);
   }
-  for (const tag of meta.tags || []) {
-    transaction += `
-        INSERT INTO tags (
-          source,
-          tag
-        )
-        VALUES (
-          ${sql_escape(id)},
-          ${sql_escape(tag)}
-        );
-        `;
+  transaction += `
+  DELETE FROM tags
+  WHERE source=${escape_value(id)};
+  `;
+  for (const tag of parsed.tags) {
+    transaction += insertStr('tags', tag);
   }
   transaction += 'COMMIT;\n';
   await exec(transaction);
@@ -93,12 +56,13 @@ export async function scanDir() {
     `
     CREATE TABLE IF NOT EXISTS notes (
       id TEXT PRIMARY KEY NOT NULL,
-      ctimeMs REAL NOT NULL,
+      ctime_ms REAL NOT NULL,
       checksum TEXT NOT NULL,
       title TEXT,
       date TEXT,
       asset TEXT,
-      wordcount INTEGER
+      dued TEXT,
+      word_count INTEGER
     );
     CREATE TABLE IF NOT EXISTS links (
       target TEXT,
@@ -109,7 +73,8 @@ export async function scanDir() {
       end_line INTEGER,
       end_column INTEGER,
       end_offset INTEGER,
-      context TEXT
+      context TEXT,
+      rank INTEGER
     );
     CREATE INDEX IF NOT EXISTS idx_source_links
     ON links (source);
@@ -123,7 +88,7 @@ export async function scanDir() {
   );
   const notes = await all(
     `
-    SELECT id, ctimeMs, checksum
+    SELECT id, ctime_ms, checksum
     FROM notes;
     `,
   );
@@ -149,11 +114,11 @@ export async function scanDir() {
         `
         BEGIN TRANSACTION;
         DELETE FROM notes
-        WHERE id=${sql_escape(note.id)};
+        WHERE id=${escape_value(note.id)};
         DELETE FROM links
-        WHERE source=${sql_escape(note.id)};
+        WHERE source=${escape_value(note.id)};
         DELETE FROM tags
-        WHERE source=${sql_escape(note.id)};
+        WHERE source=${escape_value(note.id)};
         COMMIT;
         `,
       ),
@@ -161,7 +126,6 @@ export async function scanDir() {
   }
   await Promise.all(proms);
   const endTime = Date.now();
-  proms = [];
   console.log(`updated ${updateCount}`);
   console.log(`deleted ${deleteCount}`);
   console.log(`in ${endTime - startTime}`);

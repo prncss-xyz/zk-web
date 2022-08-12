@@ -67,7 +67,8 @@ function analyse(tree) {
       }
       links.push({
         context,
-        href: node.properties.href,
+        // TODO: source
+        target: node.properties.href,
         position: node.position,
         title,
       });
@@ -111,29 +112,53 @@ export async function parseFromId(id) {
     if (error.code !== 'ENOENT') return;
     else throw error;
   }
-  return parse(raw);
-
-  // const id_ = id.slice(1);
-  // id: id_,
-  // path: id_ + note_extension,
+  return parse(raw, id);
 }
 
-export async function parse(raw) {
-  const { data, content: contentMd, matter: rawMatter } = matter(raw);
+export async function parse(raw, id) {
+  let { data, content: contentMd, matter: rawMatter } = matter(raw);
+  data ??= {};
   const { result } = await processor.process(contentMd);
+  const { title, wordCount } = result;
+  const links = [];
+  // offset links line positions and offsets according with frontmatter
+  // adds source id
   if (rawMatter) {
     const lines = (rawMatter.match(/\n/g) || '').length + 1;
     const offset = rawMatter.length;
-    // correct position with frontmatter
-    for (const link of result.links) {
-      link.position.start.line += lines;
-      link.position.start.offset += offset;
-      link.position.end.line += lines;
-      link.position.end.offset += offset;
+    let rank = 0;
+    for (const link of result.links ?? []) {
+      links.push({
+        source: id,
+        rank,
+        target: link.target,
+        startLine: link.position.start.line + lines,
+        startColumn: link.position.start.column + lines,
+        startOffset: link.position.start.offset + offset,
+        endLine: link.position.end.line + lines,
+        endColumn: link.position.end.column + lines,
+        endOffset: link.position.end.offset + offset,
+      });
+      ++rank;
     }
   }
+  const tags = [];
+  for (const tag of data.tags ?? []) {
+    tags.push({
+      tag,
+      source: id,
+    });
+  }
   return {
-    meta: data,
-    ...result,
+    note: {
+      title,
+      // rawText: result.rawText,
+      wordCount,
+      asset: data.asset,
+      dued: data.dued,
+      date: data.date,
+    },
+    links,
+    tags,
   };
 }
