@@ -5,6 +5,7 @@ specifiers:
   commander: ^9.3.0
   gray-matter: ^4.0.3
   handlebars: ^4.7.7
+  hast-util-from-html: ^1.0.0
   hast-util-to-html: ^8.0.3
   hast-util-to-text: ^3.1.1
   hastscript: ^7.0.2
@@ -40,6 +41,7 @@ dependencies:
   commander: 9.3.0
   gray-matter: 4.0.3
   handlebars: 4.7.7
+  hast-util-from-html: 1.0.0
   hast-util-to-html: 8.0.3
   hast-util-to-text: 3.1.1
   hastscript: 7.0.2
@@ -481,6 +483,11 @@ packages:
     dev: false
     optional: true
 
+  /entities/4.3.1:
+    resolution: {integrity: sha512-o4q/dYJlmyjP2zfnaWDUC6A3BQFmVTX+tZPezK7k0GLSU9QYCauscf5Y+qcEPzKL+EixVouYDgLQK5H9GrLpkg==}
+    engines: {node: '>=0.12'}
+    dev: false
+
   /env-paths/2.2.1:
     resolution: {integrity: sha512-+h1lkLKhZMTYjog1VEpJNG7NZJWcuc2DDk/qsqSTRRCOXiLjeQ1d1/udrUGhqMxUgAlwKNZ0cf2uqan5GLuS2A==}
     engines: {node: '>=6'}
@@ -646,6 +653,15 @@ packages:
     resolution: {integrity: sha512-vEr54rDu2CheBM4nLkWbW8Rycf8HhkA/KsrDnlyKnvBTyhyO+vAG6twHnfUbiRGo56YeUBNCI4HFfHg3Wu+tig==}
     dependencies:
       hast-util-is-element: 2.1.2
+    dev: false
+
+  /hast-util-from-html/1.0.0:
+    resolution: {integrity: sha512-tXYPhk28aMtDjGb4xNDaxtGKqlyZAEPGjN12jPCjczWppdLSrG/0r604a3FMvrd+9nV1HclILQiVqMnuPxN0WQ==}
+    dependencies:
+      '@types/hast': 2.3.4
+      hast-util-from-parse5: 7.1.0
+      parse5: 7.0.0
+      vfile: 5.3.4
     dev: false
 
   /hast-util-from-parse5/7.1.0:
@@ -1763,6 +1779,12 @@ packages:
 
   /parse5/6.0.1:
     resolution: {integrity: sha512-Ofn/CTFzRGTTxwpNEs9PP93gXShHcTq255nzRYSKe8AkVpZY7e1fpmTfOyoIvjP5HG7Z2ZM7VS9PPhQGW2pOpw==}
+    dev: false
+
+  /parse5/7.0.0:
+    resolution: {integrity: sha512-y/t8IXSPWTuRZqXc0ajH/UwDj4mnqLEbSttNbThcFhGrZuOyoyvNBO85PBp2jQa55wY9d07PBNjsK8ZP3K5U6g==}
+    dependencies:
+      entities: 4.3.1
     dev: false
 
   /parseurl/1.3.3:

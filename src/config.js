@@ -20,5 +20,6 @@ config.notebookDir ??= process.env.ZK_NOTEBOOK_DIR;
 config.noteExtension ??= '.md';
 config.dbDir = join(xdgData, name);
 config.dbFile = join(config.dbDir, 'db.db');
+config.purgeDelai ??= 7; // false or an amount of days (can be zero to delete immediatly)
 
 export default config;

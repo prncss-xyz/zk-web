@@ -1,37 +1,8 @@
 import fs from 'node:fs/promises';
-import path from 'node:path';
-import crypto from 'node:crypto';
 import config from './config.js';
 import { parse } from './parse.js';
 import { sql_escape, connect, exec, all, close } from './db.js';
-
-function join(a, b) {
-  if (a && b) {
-    return path.join(a, b);
-  }
-  if (a) {
-    return a;
-  }
-  return b;
-}
-
-async function* getFiles(dir, dir0) {
-  const entries = await fs.readdir(join(dir, dir0), {
-    withFileTypes: true,
-  });
-  for (const file of entries) {
-    if (file.name.startsWith('.')) continue;
-    if (file.isDirectory()) {
-      yield* getFiles(dir, join(dir0, file.name));
-    } else if (file.name.endsWith(config.noteExtension)) {
-      yield join(dir0, file.name);
-    }
-  }
-}
-
-function getChecksum(raw) {
-  return crypto.createHash('md5').update(raw, 'utf8').digest('hex');
-}
+import { join, getFiles, getChecksum } from './file-utils.js';
 
 let updateCount;
 
@@ -57,7 +28,7 @@ async function scanFile_(noteIndex, base, id) {
   console.log('updating ' + id);
   updateCount++;
   let transaction = 'BEGIN TRANSACTION;\n';
-  const { title, meta, links, wc } = await parse(raw);
+  const { title, meta, links, wordcount } = await parse(raw);
   transaction += updateNote({
     id,
     ctimeMs,
@@ -65,7 +36,7 @@ async function scanFile_(noteIndex, base, id) {
     title,
     date: meta.date ?? birthtime,
     asset: meta.asset,
-    wordcount: wc,
+    wordcount,
   });
   for (const link of links) {
     transaction += `
@@ -164,14 +135,15 @@ export async function scanDir() {
   let proms = [];
   const base = config.notebookDir;
   for await (const filename of getFiles(base)) {
-    proms.push(scanFile(noteIndex, base, filename));
+    if (filename.endsWith(config.noteExtension)) {
+      proms.push(scanFile(noteIndex, base, filename));
+    }
   }
   await Promise.all(proms);
-  const endTime = Date.now();
-  console.log(`updated ${updateCount} in ${endTime - startTime}`);
-  proms = [];
+  const deleteCount = 0;
   for (const note of noteIndex.values()) {
-    console.log('removing ' + node.id);
+    console.log('removing ' + note.id);
+    ++deleteCount;
     proms.push(
       exec(
         `
@@ -179,14 +151,19 @@ export async function scanDir() {
         DELETE FROM notes
         WHERE id=${sql_escape(note.id)};
         DELETE FROM links
-        WHERE source=${sql_escape(obj.id)};
+        WHERE source=${sql_escape(note.id)};
         DELETE FROM tags
-        WHERE source=${sql_escape(obj.id)};
+        WHERE source=${sql_escape(note.id)};
         COMMIT;
         `,
       ),
     );
   }
   await Promise.all(proms);
+  const endTime = Date.now();
+  proms = [];
+  console.log(`updated ${updateCount}`);
+  console.log(`deleted ${deleteCount}`);
+  console.log(`in ${endTime - startTime}`);
   await close();
 }

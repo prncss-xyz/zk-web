@@ -5,7 +5,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "develop": "nodemon ."
   },
   "author": "Juliette Lamarche <juliette.lamarche@princesse.xyz> (https://github.com/prncss-xyz/)",
   "license": "MIT",
@@ -14,6 +15,7 @@
     "commander": "^9.3.0",
     "gray-matter": "^4.0.3",
     "handlebars": "^4.7.7",
+    "hast-util-from-html": "^1.0.0",
     "hast-util-to-html": "^8.0.3",
     "hast-util-to-text": "^3.1.1",
     "hastscript": "^7.0.2",

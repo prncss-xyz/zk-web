@@ -4,6 +4,16 @@ import fs from 'node:fs/promises';
 
 let db;
 
+export async function clear() {
+  try {
+    await fs.rm(config.dbFile);
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err;
+    console.error(`db file ${config.dbFile} do not exist`);
+    process.exit(1);
+  }
+}
+
 // TODO: check database version and reset if needed
 function create(filename) {
   return new Promise((resolve, reject) => {

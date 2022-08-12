@@ -57,6 +57,9 @@ function analyse(tree) {
           context = toHtml({
             type: 'element',
             tagName: 'div',
+            properties: {
+              className: ['backlink'],
+            },
             children: ancestor.children,
           });
           break;
@@ -78,8 +81,8 @@ function analyse(tree) {
   );
   const rawText = toText(tree);
   // wiki link titles arbitrarily count as one word
-  const wc = wordsCount(rawText) + links.length;
-  return { title, links, rawText, wc };
+  const wordcount = wordsCount(rawText) + links.length;
+  return { title, links, rawText, wordcount };
 }
 
 function spit() {

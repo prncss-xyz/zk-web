@@ -109,7 +109,6 @@ export async function render(path, query) {
     const columns = [];
     for (const tag of queryTags) {
       const res = [];
-      console.log(items)
       for (const item of items) {
         if (item.tags.indexOf(tag) !== -1) {
           item.dir = dirname(item.path);
