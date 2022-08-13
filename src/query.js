@@ -1,4 +1,4 @@
-import { connect, get, all } from './db.js';
+import { get, all } from './db.js';
 import { fromHtml } from 'hast-util-from-html';
 import { toHtml } from 'hast-util-to-html';
 import { visit } from 'unist-util-visit';
@@ -52,7 +52,6 @@ async function processBacklinks(backlinks) {
 }
 
 export default async function query(id) {
-  await connect();
   let res;
   res = await get(
     `

@@ -54,6 +54,10 @@ export async function scanDir() {
   await connect();
   await exec(
     `
+    CREATE TABLE IF NOT EXISTS meta (
+      id TEXT PRIMARY KEY NOT NULL,
+      value
+    );
     CREATE TABLE IF NOT EXISTS notes (
       id TEXT PRIMARY KEY NOT NULL,
       ctime_ms REAL NOT NULL,
@@ -61,7 +65,9 @@ export async function scanDir() {
       title TEXT,
       date TEXT,
       asset TEXT,
-      dued TEXT,
+      event_start TEXT,
+      event_end TEXT,
+      event_day TEXT,
       status TEXT,
       word_count INTEGER
     );

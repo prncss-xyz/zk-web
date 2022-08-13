@@ -30,6 +30,19 @@ function transform() {
   };
 }
 
+function processEvent(event) {
+  if (!event) return {};
+  if (event instanceof Date)
+    return {
+      eventStart: event,
+    };
+  return {
+    eventStart: event.start,
+    eventEnd: event.end,
+    eventDay: event.day,
+  };
+}
+
 // TODO: assets
 function analyse(tree) {
   const links = [];
@@ -156,7 +169,7 @@ export async function parse(raw, id) {
       // rawText: result.rawText,
       wordCount,
       asset: data.asset,
-      dued: data.dued,
+      ...processEvent(data.event),
       date: data.date,
       status,
     },

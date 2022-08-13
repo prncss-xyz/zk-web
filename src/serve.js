@@ -9,6 +9,8 @@ import { render as renderTags } from './render/tags.js';
 import { resolve } from 'path';
 import { parseFromId } from './parse.js';
 import query from './query.js';
+import ical from './ical.js';
+import * as db from './db.js';
 
 async function logger(ctx, next) {
   console.log(ctx.method, ctx.url);
@@ -26,9 +28,10 @@ async function onlyLocal(ctx, next) {
 }
 
 const api = new Router();
-api.get('/stop', (ctx) => {
+api.get('/stop', async (ctx) => {
   ctx.type = 'text/plain';
   ctx.body = 'bye!';
+  await db.close();
   setImmediate(() => {
     process.exit(0);
   });
@@ -57,15 +60,18 @@ router.get('/list(/)?(.*)', async (ctx) => {
     link = link.slice(0, -1);
   }
   try {
-    const body = await renderList(link, query);
     ctx.type = 'text/html';
-    ctx.body = body;
+    ctx.body = await renderList(link, query);
   } catch (e) {
     if (e.code === 'ERR_NO_LIST') {
       ctx.type = 'text/plain';
       ctx.body = e.message;
     } else throw e;
   }
+});
+router.get('/cal.ics(/)?', async (ctx) => {
+  ctx.type = 'text/plain';
+  ctx.body = await ical();
 });
 
 router.get('/note/(.+)', async (ctx) => {
@@ -128,6 +134,8 @@ app
   .use(mount('/assets', koaStatic(resolve(config.dir, 'assets'))))
   .use(mount('/assets', koaStatic(resolve(process.env.HOME, config.assets))))
   .use(api.allowedMethods());
+
+db.connect();
 
 export default function serve() {
   app.listen(config.port);
