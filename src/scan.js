@@ -62,8 +62,11 @@ export async function scanDir() {
       date TEXT,
       asset TEXT,
       dued TEXT,
+      status TEXT,
       word_count INTEGER
     );
+    CREATE INDEX IF NOT EXISTS idx_status_notes
+    ON notes (status);
     CREATE TABLE IF NOT EXISTS links (
       target TEXT,
       source TEXT,

@@ -109,7 +109,7 @@ export async function parseFromId(id) {
   try {
     raw = await fs.readFile(absPath, 'utf-8');
   } catch (error) {
-    if (error.code !== 'ENOENT') return;
+    if (error.code === 'ENOENT') return;
     else throw error;
   }
   return parse(raw, id);
@@ -142,6 +142,7 @@ export async function parse(raw, id) {
       ++rank;
     }
   }
+  const status = data.status?.at(-1)?.name;
   const tags = [];
   for (const tag of data.tags ?? []) {
     tags.push({
@@ -157,6 +158,7 @@ export async function parse(raw, id) {
       asset: data.asset,
       dued: data.dued,
       date: data.date,
+      status,
     },
     links,
     tags,

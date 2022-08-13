@@ -3,6 +3,8 @@ import { fromHtml } from 'hast-util-from-html';
 import { toHtml } from 'hast-util-to-html';
 import { visit } from 'unist-util-visit';
 
+// TODO: check for broken links
+
 // PERF: fetch in one query
 async function processBacklinks(backlinks) {
   for (const backlink of backlinks) {
